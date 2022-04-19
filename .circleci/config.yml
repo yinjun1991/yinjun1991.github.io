@@ -36,4 +36,4 @@ jobs:
           command: hexo generate
       - run:
           name: Deploy Static Files to gh-pages Branch
-          command: gh-pages --dotfiles --message "[skip ci] Updates" --dist public --repo "https://${process.env.GH_TOKEN}@github.com/yinjun1991/yinjun.github.io.git"
+          command: gh-pages --dotfiles --message "[skip ci] Updates" --dist public --repo https://"$GH_TOKEN"@github.com/yinjun1991/yinjun.github.io.git
