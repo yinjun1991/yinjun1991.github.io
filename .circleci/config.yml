@@ -1,0 +1,39 @@
+version: 2
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+
+jobs:
+  build:
+    docker:
+      - image: node:16.14.2
+    steps:
+      - checkout
+      - run:
+          name: Disable jekyll builds
+          command: touch ~/.nojekyll
+      - run:
+          name: Prepare Git Initialization
+          command: |
+            git config user.email "476296008@qq.com"
+            git config user.name "yinjun1991"
+      - run:
+          name: Install and Configure Dependencies
+          command: |
+            npm install -g gh-pages@2.0.1
+            npm install -g hexo-cli
+      - run:
+          name: Install Hexo Site Dependencies
+          command: npm install
+      - run:
+          name: Generate Hexo Static Files
+          command: hexo generate
+      - run:
+          name: Deploy Static Files to gh-pages Branch
+          command: gh-pages --dotfiles --message "[skip ci] Updates" --dist public --repo "https://${process.env.GH_TOKEN}@github.com/yinjun1991/yinjun.github.io.git"
