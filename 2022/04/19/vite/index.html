@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>vite 为什么快 | 写好代码</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="vite 为什么快？vite 将 html 文件看作是项目入口文件，在 html 里通过 &lt;script type&#x3D;&quot;module&quot;&gt; 使用 ECMAScript 原生的 import 向开发服务器请求依赖，没有被请求的依赖不会处理，这样就不需要像 webpack 打包整个项目。在巨型前端项目中，这种方式的效率有质的提升。  vite 的简版原型可以参考 https">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vite 为什么快">
+<meta property="og:url" content="http://yinjun.github.io/2022/04/19/vite/index.html">
+<meta property="og:site_name" content="写好代码">
+<meta property="og:description" content="vite 为什么快？vite 将 html 文件看作是项目入口文件，在 html 里通过 &lt;script type&#x3D;&quot;module&quot;&gt; 使用 ECMAScript 原生的 import 向开发服务器请求依赖，没有被请求的依赖不会处理，这样就不需要像 webpack 打包整个项目。在巨型前端项目中，这种方式的效率有质的提升。  vite 的简版原型可以参考 https">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-19T12:34:05.000Z">
+<meta property="article:modified_time" content="2022-04-25T07:45:15.450Z">
+<meta property="article:author" content="yinjun">
+<meta property="article:tag" content="vitejs,vite">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="写好代码" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.4.2"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">写好代码</a>
+      </h1>
+      
+        <h2 id="subtitle-wrap">
+          <a href="/" id="subtitle">一个平庸程序员的博客</a>
+        </h2>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yinjun.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-vite" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/04/19/vite/" class="article-date">
+  <time class="dt-published" datetime="2022-04-19T12:34:05.000Z" itemprop="datePublished">2022-04-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      vite 为什么快
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="vite-为什么快？"><a href="#vite-为什么快？" class="headerlink" title="vite 为什么快？"></a>vite 为什么快？</h1><p>vite 将 html 文件看作是项目入口文件，在 html 里通过 <code>&lt;script type=&quot;module&quot;&gt;</code> 使用 ECMAScript 原生的 <code>import</code> 向开发服务器请求依赖，没有被请求的依赖不会处理，这样就不需要像 webpack 打包整个项目。在巨型前端项目中，这种方式的效率有质的提升。</p>
+<blockquote>
+<p>vite 的简版原型可以参考 <a target="_blank" rel="noopener" href="https://github.com/preactjs/wmr">https://github.com/preactjs/wmr</a></p>
+</blockquote>
+<p>本文将针对 vite 开发时的 server 机制进行说明。</p>
+<h2 id="demo"><a href="#demo" class="headerlink" title="demo"></a>demo</h2><p>举个简单的例子，index.html 的源码内容如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;en&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;viewport&quot;</span> <span class="attr">content</span>=<span class="string">&quot;width=device-width, initial-scale=1.0&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Vite App<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;root&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 注意，这里用 url 的方式引入 main.tsx --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;module&quot;</span> <span class="attr">src</span>=<span class="string">&quot;/src/main.tsx&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>启动 vite server 之后，返回给浏览器的 html 如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">&quot;en&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;module&quot;</span> <span class="attr">src</span>=<span class="string">&quot;/@vite/client&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;module&quot;</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">      <span class="comment">// /@react-refresh 会被 react-refresh 插件处理，实际是 react-refresh/cjs/react-refresh-runtime.development.js 的代码</span></span></span><br><span class="line"><span class="language-javascript">      <span class="keyword">import</span> <span class="title class_">RefreshRuntime</span> <span class="keyword">from</span> <span class="string">&#x27;/@react-refresh&#x27;</span>;</span></span><br><span class="line"><span class="language-javascript">      <span class="title class_">RefreshRuntime</span>.<span class="title function_">injectIntoGlobalHook</span>(<span class="variable language_">window</span>);</span></span><br><span class="line"><span class="language-javascript">      <span class="variable language_">window</span>.<span class="property">$RefreshReg$</span> = <span class="function">() =&gt;</span> &#123;&#125;;</span></span><br><span class="line"><span class="language-javascript">      <span class="variable language_">window</span>.<span class="property">$RefreshSig$</span> = <span class="function">() =&gt;</span> <span class="function">(<span class="params">type</span>) =&gt;</span> type;</span></span><br><span class="line"><span class="language-javascript">      <span class="variable language_">window</span>.<span class="property">__vite_plugin_react_preamble_installed__</span> = <span class="literal">true</span>;</span></span><br><span class="line"><span class="language-javascript">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">&quot;viewport&quot;</span> <span class="attr">content</span>=<span class="string">&quot;width=device-width, initial-scale=1.0&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>Vite App<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;root&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;module&quot;</span> <span class="attr">src</span>=<span class="string">&quot;/src/main.tsx&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，vite 向 html 的 head 前面插入了两个 script：</p>
+<ul>
+<li>&#x2F;@vite&#x2F;client 用来和 vite websocket server 通信，进行热更新</li>
+<li>&#x2F;@react-refresh 用来更新 React 组件</li>
+</ul>
+<p>后面会详细讲到这两个脚本的作用，现在我们继续向下看。</p>
+<p>浏览器接下来就会向开发服务器请求 &#x2F;src&#x2F;main.tsx，&#x2F;src&#x2F;main.tsx 的源码如下：</p>
+<figure class="highlight tsx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="title class_">React</span> <span class="keyword">from</span> <span class="string">&#x27;react&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="title class_">ReactDOM</span> <span class="keyword">from</span> <span class="string">&#x27;react-dom&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">App</span> <span class="keyword">from</span> <span class="string">&#x27;./App.tsx&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;./index.less&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="title class_">ReactDOM</span>.<span class="title function_">render</span>(<span class="language-xml"><span class="tag">&lt;<span class="name">App</span> /&gt;</span></span>, <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;root&#x27;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>vite 会对 main.tsx 文件进行处理，返回给浏览器的实际内容如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="title class_">React</span> <span class="keyword">from</span> <span class="string">&#x27;/node_modules/.vite/react.js?v=9a3efe6b&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="title class_">ReactDOM</span> <span class="keyword">from</span> <span class="string">&#x27;/node_modules/.vite/react-dom.js?v=9a3efe6b&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">App</span> <span class="keyword">from</span> <span class="string">&#x27;/src/App.tsx&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&#x27;/src/index.less&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="title class_">ReactDOM</span>.<span class="title function_">render</span>(<span class="title class_">React</span>.<span class="title function_">createElement</span>(<span class="title class_">App</span>), <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&#x27;app&#x27;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 vite 对 tsx 文件进行了一些“简单”的处理（依赖的地址替换成 url）就返回给浏览器了，并没有打包整个 js 代码。</p>
+<p>浏览器收到 main.tsx 之后，又会请求 &#x2F;src&#x2F;index.less，index.less 源码如下：</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">@color:</span> red;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">margin</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">color</span>: <span class="variable">@color</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么浏览器收到的 less 文件内容是什么呢？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; createHotContext <span class="keyword">as</span> __vite__createHotContext &#125; <span class="keyword">from</span> <span class="string">&#x27;/@vite/client&#x27;</span>;</span><br><span class="line"><span class="keyword">import</span>.<span class="property">meta</span>.<span class="property">hot</span> = <span class="title function_">__vite__createHotContext</span>(<span class="string">&#x27;/src/index.less&#x27;</span>);</span><br><span class="line"><span class="keyword">import</span> &#123; updateStyle, removeStyle &#125; <span class="keyword">from</span> <span class="string">&#x27;/@vite/client&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> id = <span class="string">&#x27;/Users/june/Workspace/vite-demo/src/index.less&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> css = <span class="string">&#x27;body &#123;\n  margin: 0;\n  color: red;\n&#125;\n&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="title function_">updateStyle</span>(id, css);</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span>.<span class="property">meta</span>.<span class="property">hot</span>.<span class="title function_">accept</span>();</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> css;</span><br><span class="line"><span class="keyword">import</span>.<span class="property">meta</span>.<span class="property">hot</span>.<span class="title function_">prune</span>(<span class="function">() =&gt;</span> <span class="title function_">removeStyle</span>(id));</span><br></pre></td></tr></table></figure>
+
+<p>为了实现热更新，less 文件的内容会作为 javascript（css 文件也是一样的返回结果）返回给浏览器。</p>
+<p>这里说明一下，浏览器请求一个 url 的时候，是不知道 url 背后的资源类型的，只有从服务器的响应头的 <code>Content-Type</code> 字段才知道类型。</p>
+<h2 id="plugin"><a href="#plugin" class="headerlink" title="plugin"></a>plugin</h2><p>在说明 vite 对 tsx 和 less 如何处理之前，需要先了解 vite server 的架构。</p>
+<p>vite server 的核心是一个名为 <code>pluginContainer</code> 的实例，pluginContainer 可以流水线式的调用注册的插件对 url 进行处理，最终返回内容给浏览器。</p>
+<p>这些 plugin 也就是 vite plugin，兼容 rollup plugin，主要有以下方法：</p>
+<blockquote>
+<p>rollup plugin 的文档可以参考 <a target="_blank" rel="noopener" href="https://rollupjs.org/guide/en/#plugin-development">https://rollupjs.org/guide/en/#plugin-development</a></p>
+</blockquote>
+<ul>
+<li>resolveId(importee: string, importer: string): { id: string, external: boolean }</li>
+</ul>
+<p>该方法用来查询 import 路径的真实地址，比如计算各种 alias mainFields extensions，查询最终文件地址。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// foo.js</span></span><br><span class="line"><span class="comment">// importer 是 foo.js</span></span><br><span class="line"><span class="comment">// importee 是 bar</span></span><br><span class="line"><span class="comment">// bar 的最终 resolve 结果可能是 node_modules/bar/index.js</span></span><br><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Bar</span> &#125; <span class="keyword">from</span> <span class="string">&#x27;bar&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>load(id: string): { code: string, map?: string }</li>
+</ul>
+<p>该方法用来加载指定的资源，返回资源内容.</p>
+<ul>
+<li>transform(code: string, id: string): { code: string, map?: string }</li>
+</ul>
+<p>该方法用来对资源内容进行处理，比如将 tsx 编译成 js，修改代码中 import from 的路径。</p>
+<h3 id="vite-的-plugins"><a href="#vite-的-plugins" class="headerlink" title="vite 的 plugins"></a>vite 的 plugins</h3><p>vite 主要有以下 plugins</p>
+<ul>
+<li>vite:pre-alias 尝试直接加载 prebundle 的结果，下文会讲到什么是 prebundle</li>
+<li>alias 其实就是 @rollup&#x2F;plugin-alias，各种 alias 重定向</li>
+<li>react-refresh 该插件源自 @vitejs&#x2F;plugin-react-refresh 包，在 jsx&#x2F;tsx 的编译结果前后添加 react-refresh 库代码及热更新代码</li>
+<li>vite:resolve 查询 npm 包指向的最终文件路径，包括 require 算法，extensions、browser 等规则。请谨慎阅读源码，否则会产生头晕恶心想吐等症状</li>
+<li><strong>vite:css</strong> 编译 less&#x2F;sass&#x2F;stylus 为 css 代码，转换代码中的 url 等资源路径，处理 css modules 等</li>
+<li><strong>vite:esbuild</strong> 将 ts&#x2F;tsx&#x2F;jsx 转换为 js</li>
+<li>vite:json 读取 json 文件内容，转换为 esm 格式的 js 内容</li>
+<li>vite:define 替换 process.env.NODE_ENV 等环境变量</li>
+<li>vite:css-post 将 css 代码添加 updateStyle 等方法，转换为 js 代码</li>
+<li>vite:client-inject 转换 &#x2F;@vite&#x2F;client 的代码，注入 websocket 的 host port 等变量，实现热更新</li>
+<li><strong>vite:import-analysis</strong> 将依赖路径转换为 url</li>
+</ul>
+<h2 id="tsx-文件"><a href="#tsx-文件" class="headerlink" title="tsx 文件"></a>tsx 文件</h2><p>那么 vite 对 main.tsx 做了哪些处理呢？</p>
+<p>主要有以下几点：</p>
+<ul>
+<li>npm 包预编译，存储到缓存目录</li>
+<li>将依赖路径转换为 url</li>
+<li>tsx 编译成 js</li>
+</ul>
+<p>下面分别讲解：</p>
+<h2 id="npm-依赖"><a href="#npm-依赖" class="headerlink" title="npm 依赖"></a>npm 依赖</h2><p>类似 <code>import &#123; someMethod &#125; from &#39;some_dep&#39;;</code> 在浏览器中会报错，因为浏览器只能识别 URL，无法识别 npm 包。</p>
+<p>那么 vite 是怎么处理 npm 包的呢？</p>
+<p>vite 首先用 esbuild 从入口文件找到所有的 npm 包进行预处理，然后将产物存储到 <code>node_modules/.vite</code> 目录下，这个过程称为 prebundle，在 server 启动前执行。</p>
+<blockquote>
+<p>prebundle 的调用在 packages&#x2F;vite&#x2F;src&#x2F;node&#x2F;server&#x2F;index.ts 的 runOptimize 方法</p>
+</blockquote>
+<p>预处理的过程是提供了 esbuild 的插件，插件的 onResolve 钩子（类似 rollup）找到依赖，如果依赖的路径含有 node_modules 或者指定的配置，就记录下来。</p>
+<p>再使用 esbuild 将记录的依赖列表打包，产出为 ESM 格式，并存储到 <code>node_modules/.vite</code> 目录下，最后生成一份 meta 信息，包括依赖 id 和 build 产物的映射。</p>
+<p>import-analysis 插件再将代码中的 some_dep 重写成类似 <code>/node_modules/.vite/some_dep.js?v=deiejgk</code>，这样就是一个合法的 URL 了。</p>
+<h2 id="依赖路径替换"><a href="#依赖路径替换" class="headerlink" title="依赖路径替换"></a>依赖路径替换</h2><p>vite 使用 <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/es-module-lexer">es-module-lexer</a> 分析代码（经过 esbuild 编译后的 ESM）中的依赖，并进行路径替换。</p>
+<p>需要注意：vite 不支持类似 webpack 的 <code>import(</code>.&#x2F;hello&#x2F;${lang}.json<code>)</code> 表达式</p>
+<h2 id="less-文件"><a href="#less-文件" class="headerlink" title="less 文件"></a>less 文件</h2><p>vite 会先将 less 文件编译成 css 代码，再用 postcss 替换 <code>@import</code> 和 <code>url()</code> 的路径。</p>
+<p>如果 less 文件的后缀名是 <code>.modudle.less</code>，还会使用 <a target="_blank" rel="noopener" href="https://github.com/madyankin/postcss-modules">postcss-modules</a> 来生成 css module 的 class 名称，并将名称的映射关系 JSON 作为 default 导出。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// App.module.less 源码</span></span><br><span class="line"></span><br><span class="line"><span class="selector-class">.App</span> &#123;</span><br><span class="line">  <span class="attribute">text-align</span>: center;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>返回给浏览器的内容：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> css = <span class="string">&#x27;._App_dwiay_1 &#123;\n  text-align: center;\n&#125;&#x27;</span>;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title class_">App</span> = <span class="string">&#x27;_App_dwiay_1&#x27;</span>;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> &#123;</span><br><span class="line">  <span class="title class_">App</span>: <span class="title class_">App</span>,</span><br><span class="line">  <span class="string">&#x27;App-logo&#x27;</span>: <span class="string">&#x27;_App-logo_dwiay_4&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;App-logo-spin&#x27;</span>: <span class="string">&#x27;_App-logo-spin_dwiay_1&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;App-header&#x27;</span>: <span class="string">&#x27;_App-header_dwiay_13&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;App-link&#x27;</span>: <span class="string">&#x27;_App-link_dwiay_23&#x27;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这样 js 文件就可以使用 <code>import styles from &#39;/App.module.less&#39;;</code> 再使用 <code>styles.App</code> 了。</p>
+<h2 id="react-refresh"><a href="#react-refresh" class="headerlink" title="react-refresh"></a>react-refresh</h2><p>react-refresh 插件 使用 babel&#x2F;core 及相关插件编译 tsx&#x2F;jsx，添加 react 官方的热更新代码，代码片段如下：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 就是返回 react-refresh npm 包的内容，并转换为 ESM 的形式</span></span><br><span class="line"><span class="comment">// 这里用了巧妙的方式将 commonjs 转换为 ESM，即在模块内定义名为 exports 的变量，再拼接代码</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">load</span>(<span class="params">id</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (id === <span class="string">&#x27;/@react-refresh&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">`</span></span><br><span class="line"><span class="string">const exports = &#123;&#125;;</span></span><br><span class="line"><span class="string"><span class="subst">$&#123;fs.readFileSync(</span></span></span><br><span class="line"><span class="subst"><span class="string">  <span class="built_in">require</span>.resolve(<span class="string">&#x27;react-refresh/cjs/react-refresh-runtime.development.js&#x27;</span>),</span></span></span><br><span class="line"><span class="subst"><span class="string">  <span class="string">&#x27;utf-8&#x27;</span></span></span></span><br><span class="line"><span class="subst"><span class="string">)&#125;</span></span></span><br><span class="line"><span class="string">export default exports</span></span><br><span class="line"><span class="string">`</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用 babel 处理代码，添加 react 官方的热更新代码</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">transform</span>(<span class="params">code, id</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> parserPlugins = [</span><br><span class="line">    <span class="string">&#x27;jsx&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;importMeta&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;topLevelAwait&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;classProperties&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;classPrivateProperties&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;classPrivateMethods&#x27;</span></span><br><span class="line">  ];</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="regexp">/\.tsx?$/</span>.<span class="title function_">test</span>(id)) &#123;</span><br><span class="line">    parserPlugins.<span class="title function_">push</span>(<span class="string">&#x27;typescript&#x27;</span>, <span class="string">&#x27;decorators-legacy&#x27;</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// result 是编译后的代码</span></span><br><span class="line">  <span class="keyword">const</span> result = <span class="title function_">transformSync</span>(code, &#123;</span><br><span class="line">    <span class="attr">babelrc</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">configFile</span>: <span class="literal">false</span>,</span><br><span class="line">    <span class="attr">filename</span>: id,</span><br><span class="line">    <span class="attr">parserOpts</span>: &#123;</span><br><span class="line">      <span class="attr">sourceType</span>: <span class="string">&#x27;module&#x27;</span>,</span><br><span class="line">      <span class="attr">allowAwaitOutsideFunction</span>: <span class="literal">true</span>,</span><br><span class="line">      <span class="attr">plugins</span>: parserPlugins</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">generatorOpts</span>: &#123;</span><br><span class="line">      <span class="attr">decoratorsBeforeExport</span>: <span class="literal">true</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">plugins</span>: [</span><br><span class="line">      <span class="comment">// &lt;sometag /&gt; 编译成 &lt;sometag __self=&#123;this&#125; /&gt;</span></span><br><span class="line">      <span class="built_in">require</span>(<span class="string">&#x27;@babel/plugin-transform-react-jsx-self&#x27;</span>),</span><br><span class="line">      <span class="comment">// &lt;sometag /&gt; 编译成 &lt;sometag __source=&#123; &#123; fileName: &#x27;this/file.js&#x27;, lineNumber: 10, columnNumber: 1 &#125; &#125; /&gt;</span></span><br><span class="line">      <span class="built_in">require</span>(<span class="string">&#x27;@babel/plugin-transform-react-jsx-source&#x27;</span>),</span><br><span class="line">      <span class="comment">// https://github.com/facebook/react/blob/main/packages/react-refresh/src/ReactFreshBabelPlugin.js</span></span><br><span class="line">      [<span class="built_in">require</span>(<span class="string">&#x27;react-refresh/babel&#x27;</span>), &#123; <span class="attr">skipEnvCheck</span>: <span class="literal">true</span> &#125;]</span><br><span class="line">    ],</span><br><span class="line">    <span class="attr">ast</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">sourceMaps</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">sourceFileName</span>: id</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="HMR"><a href="#HMR" class="headerlink" title="HMR"></a>HMR</h2><p><code>/@vite/client</code> 加载之后会和 vite server 建立长链接，监听处理 server 推送的消息（当 watcher 监听到文件变化时向 vite server 推送变动文件的信息），主要有以下类型：</p>
+<ul>
+<li><p>update<br>消息 payload 是一组更新信息，如果是 js-update 会重新请求 js 文件。如果是 css-update 则会更新 link 链接。</p>
+</li>
+<li><p>full-reload<br>调用 location.reload 刷新页面。当 html 页面更新，或者是依赖图的入口资源更新（&#x2F;src&#x2F;main.tsx）更新时会触发该事件。</p>
+</li>
+<li><p>prune<br>清除资源，比如删掉 link 标签。假设 A 文件变动，经过对比发现 A 文件不再引入 B 资源，而且 B 资源不再被所有资源引用，则触发该事件清理 B 资源。</p>
+</li>
+</ul>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>可以看到 vite 的思路还是比较简单的，大部分的代码都是在处理很脏的逻辑，比如 commonjs 和 esm 的转换，资源的 resolve 等。</p>
+<p>vite 的实现充分利用了社区资源：rollup esbuild babel es-module-lexer postcss，将这些工具应用在合适的场景。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yinjun.github.io/2022/04/19/vite/" data-id="cl2ef05lt000g8mmt3f84082b" data-title="vite 为什么快" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/vitejs-vite/" rel="tag">vitejs,vite</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/04/19/tcp/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          从 TCP 说起
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2022/04/19/this/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">后一篇</strong>
+      <div class="article-nav-title">不一样的 this 问题</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/chrome-extensions/" rel="tag">chrome,extensions</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/event-passive/" rel="tag">event,passive</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/forever/" rel="tag">forever</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/git/" rel="tag">git</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js-this/" rel="tag">js,this</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/json-schema/" rel="tag">json,schema</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tcp/" rel="tag">tcp</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/viewport/" rel="tag">viewport</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vitejs-vite/" rel="tag">vitejs,vite</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag">设计模式</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/chrome-extensions/" style="font-size: 10px;">chrome,extensions</a> <a href="/tags/event-passive/" style="font-size: 10px;">event,passive</a> <a href="/tags/forever/" style="font-size: 10px;">forever</a> <a href="/tags/git/" style="font-size: 10px;">git</a> <a href="/tags/js-this/" style="font-size: 10px;">js,this</a> <a href="/tags/json-schema/" style="font-size: 10px;">json,schema</a> <a href="/tags/tcp/" style="font-size: 10px;">tcp</a> <a href="/tags/viewport/" style="font-size: 10px;">viewport</a> <a href="/tags/vitejs-vite/" style="font-size: 10px;">vitejs,vite</a> <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 10px;">设计模式</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/04/">四月 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">四月 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2022/04/19/articles/">好文集锦</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/19/chrome_extension/">chrome 插件开发入门</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/19/design_patterns/">设计模式</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/19/forever/">后台运行 NodeJS</a>
+          </li>
+        
+          <li>
+            <a href="/2022/04/19/git/">git 常用命令</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2022 yinjun<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
