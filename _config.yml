@@ -4,17 +4,17 @@
 
 # Site
 title: 写好代码
-subtitle: '一个平庸程序员的博客'
+subtitle: '热爱生活、保持好奇'
 description: ''
-keywords: yinjun
+keywords: yinjun,前端,frontend
 author: yinjun
 language: zh-CN
 timezone: 'Asia/Shanghai'
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://yinjun.github.io
-permalink: :year/:month/:day/:title/
+url: https://yinjun1991.github.io
+permalink: :year/:month/:day/
 permalink_defaults:
 pretty_urls:
   trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
@@ -26,35 +26,37 @@ public_dir: public
 tag_dir: tags
 archive_dir: archives
 category_dir: categories
+# Include code directory (subdirectory of source_dir)
 code_dir: downloads/code
 i18n_dir: :lang
+# Paths that will be copied to public raw, without being rendered. You can use glob expressions for path matching.
 skip_render:
 
 # Writing
-new_post_name: :title.md # File name of new posts
+new_post_name: :year_:month_:day.md # File name of new posts
 default_layout: post
 titlecase: false # Transform title into titlecase
 external_link:
   enable: true # Open external links in new tab
   field: site # Apply to the whole site
   exclude: ''
-filename_case: 0
+filename_case: 1
 render_drafts: false
-post_asset_folder: false
+# https://hexo.io/docs/asset-folders
+post_asset_folder: true
 relative_link: false
 future: true
+syntax_highlighter: highlight.js
 highlight:
-  enable: true
-  line_number: true
   auto_detect: false
-  tab_replace: ''
+  line_number: false
+  line_threshold: 0
+  tab_replace: '  '
+  # https://hexo.io/docs/syntax-highlight#exclude-languages-6-1-0
+  exclude_languages:
+    - example
   wrap: true
   hljs: false
-prismjs:
-  enable: false
-  preprocess: true
-  line_number: true
-  tab_replace: ''
 
 # Home page setting
 # path: Root path for your blogs index page. (default = '')
@@ -64,6 +66,7 @@ index_generator:
   path: ''
   per_page: 20
   order_by: -date
+  pagination_dir: 'page'
 
 # Category & Tag
 default_category: uncategorized
@@ -98,6 +101,7 @@ ignore:
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: landscape
+theme_config: ''
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
